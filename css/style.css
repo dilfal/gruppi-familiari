@@ -96,6 +96,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
   .top { background: var(--bg); }
 }
 .brand { display: inline-flex; align-items: center; gap: .55rem; font-weight: 700; color: var(--text); text-decoration: none; }
+.btn.exit { margin-left: auto; min-height: 0; padding: .35rem .8rem; font-size: .85rem; }
 .brand img { border-radius: 7px; display: block; }
 .nav-desktop { display: none; gap: .25rem; }
 .nav-desktop a {

@@ -578,7 +578,14 @@
 
   /* ---------- router ---------- */
   var currentLeave = null;
+  // Posizione di scorrimento per pagina: si ripristina con Indietro/Avanti, non quando si apre un link.
+  var posizioni = {}, hashPrec = null, daLink = false;
+  try { history.scrollRestoration = "manual"; } catch (e) {}
+  function segnaLink() { daLink = true; setTimeout(function () { daLink = false; }, 500); }
+  document.addEventListener("click", function (e) { if (e.target.closest && e.target.closest('a[href^="#/"]')) segnaLink(); }, true);
+
   function route() {
+    if (hashPrec !== null) posizioni[hashPrec] = window.scrollY;
     if (currentLeave) { try { currentLeave(); } catch (e) {} currentLeave = null; }
     var raw = (location.hash || "#/").replace(/^#\/?/, "");
     var qs = ""; var qi = raw.indexOf("?");
@@ -609,6 +616,7 @@
     if (sf) sf.addEventListener("submit", function (e) {
       e.preventDefault();
       var v = document.getElementById("q").value.trim();
+      segnaLink();
       location.hash = "#/cerca?q=" + encodeURIComponent(v);
     });
     // Il titolo della pagina dà il nome al contenuto principale: lo legge lo screen reader quando prende il focus.
@@ -616,9 +624,12 @@
     if (h1) { h1.id = "titolo-pagina"; main.setAttribute("aria-labelledby", "titolo-pagina"); }
     else main.removeAttribute("aria-labelledby");
     if (p.after) p.after();
-    window.scrollTo(0, 0);
+    var ripristina = !daLink && posizioni[location.hash || "#/"];
+    daLink = false;
+    window.scrollTo(0, ripristina || 0);
     main.focus({ preventScroll: true });
-    if (p.afterScroll) p.afterScroll();
+    if (p.afterScroll && !ripristina) p.afterScroll();
+    hashPrec = location.hash || "#/";
   }
 
   /* ---------- offline (service worker) ---------- */
@@ -645,6 +656,11 @@
   }
 
   buildNav();
+  // «Esci subito»: cancella ciò che è in memoria e lascia il sito (la pagina corrente viene sostituita nella cronologia).
+  document.getElementById("esci").addEventListener("click", function () {
+    try { sessionStorage.clear(); } catch (e) {}
+    location.replace("https://www.google.it/");
+  });
   window.addEventListener("hashchange", route);
   route();
   registraSW();
