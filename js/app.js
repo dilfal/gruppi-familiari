@@ -24,6 +24,30 @@
   function norm(s) {
     return String(s).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
   }
+  // Parametro di una query dell'hash (#/percorso?chiave=valore)
+  function param(qs, k) {
+    var m = new RegExp("(?:^|&)" + k + "=([^&]*)").exec(qs || "");
+    if (!m) return "";
+    try { return decodeURIComponent(m[1].replace(/\+/g, " ")); } catch (e) { return ""; }
+  }
+  // Copia negli appunti (con ripiego per i browser senza navigator.clipboard)
+  function copia(testo, btn) {
+    function ok() {
+      var prima = btn.textContent;
+      btn.textContent = "Copiato";
+      live.textContent = "Testo copiato negli appunti";
+      setTimeout(function () { btn.textContent = prima; }, 2000);
+    }
+    function ripiego() {
+      var t = document.createElement("textarea");
+      t.value = testo; t.setAttribute("readonly", ""); t.style.position = "fixed"; t.style.opacity = "0";
+      document.body.appendChild(t); t.select();
+      try { if (document.execCommand("copy")) ok(); } catch (e) {}
+      document.body.removeChild(t);
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(testo).then(ok, ripiego);
+    else ripiego();
+  }
   function findChap(id) { for (var i = 0; i < G.length; i++) if (G[i].id === id) return i; return -1; }
 
   var ICONE = {
@@ -63,11 +87,11 @@
     var map = { frasi: "pratica", esercizi: "pratica", scenari: "pratica", glossario: "altro", fonti: "altro", cerca: "altro" };
     var tabSec = map[sec] || sec;
     [].forEach.call(document.querySelectorAll("#tabbar a"), function (a) {
-      a.toggleAttribute("aria-current", a.dataset.sec === tabSec);
       if (a.dataset.sec === tabSec) a.setAttribute("aria-current", "page");
+      else a.removeAttribute("aria-current");
     });
     [].forEach.call(document.querySelectorAll("#navDesktop a"), function (a) {
-      if (a.dataset.sec === sec || (sec === "guida" && a.dataset.sec === "guida")) a.setAttribute("aria-current", "page");
+      if (a.dataset.sec === sec) a.setAttribute("aria-current", "page");
       else a.removeAttribute("aria-current");
     });
   }
@@ -131,7 +155,7 @@
       '<section class="card"><h2>Come usare questa guida</h2><ul>' +
       "<li>Non serve leggere tutto: parti dal punto che ti serve adesso.</li>" +
       "<li>Le informazioni sono riformulate da testi clinici e per familiari, elencati in <a href=\"#/fonti\">Fonti</a>.</li>" +
-      "<li>Non viene salvato nulla: niente account, niente dati personali, niente tracciamento.</li>" +
+      "<li>Niente account, niente dati personali, niente tracciamento: ciò che scrivi non viene inviato a nessun server.</li>" +
       "<li>La guida non fa diagnosi e non sostituisce un professionista.</li></ul></section>";
     return { title: NOME, html: h, after: refreshInstall };
   }
@@ -145,20 +169,24 @@
   }
 
   function pageGuida() {
-    var h = "<h1>Guida</h1><p class=\"lead\">Undici capitoli brevi, da leggere nell'ordine che preferisci.</p>" + searchBox("") + '<div class="grid">';
+    var h = "<h1>Guida</h1><p class=\"lead\">" + G.length + " capitoli brevi, da leggere nell'ordine che preferisci.</p>" + searchBox("") + '<div class="grid">';
     G.forEach(function (c, i) {
       h += tile("#/guida/" + c.id, (i + 1) + ". " + c.titolo, c.sommario, c.minuti + " min di lettura");
     });
     h += "</div>";
     return { title: "Guida · " + NOME, html: h };
   }
-  function pageCapitolo(id) {
+  function pageCapitolo(id, qs) {
     var i = findChap(id);
     if (i < 0) return page404();
     var c = G[i];
     var h = '<p class="crumbs"><a href="#/guida">Guida</a> › Capitolo ' + (i + 1) + "</p><article class=\"chap\"><h1>" + esc(c.titolo) + '</h1><p><span class="badge">' + c.minuti + " min di lettura</span></p>";
-    c.sezioni.forEach(function (s) {
-      h += "<h2>" + esc(s.t) + "</h2>";
+    if (c.sezioni.length > 2) {
+      h += '<nav class="toc-cap" aria-label="In questo capitolo"><strong>In questo capitolo</strong><ol>' +
+        c.sezioni.map(function (s, k) { return '<li><a href="#/guida/' + c.id + '" data-sez="' + k + '">' + esc(s.t) + "</a></li>"; }).join("") + "</ol></nav>";
+    }
+    c.sezioni.forEach(function (s, k) {
+      h += '<h2 id="sez-' + k + '" tabindex="-1">' + esc(s.t) + "</h2>";
       (s.p || []).forEach(function (p) { h += "<p>" + fmt(p) + "</p>"; });
       if (s.l) h += "<ul>" + s.l.map(function (x) { return "<li>" + fmt(x) + "</li>"; }).join("") + "</ul>";
       if (s.box) h += '<div class="callout ' + (s.box.tipo === "attenzione" ? "attenzione" : "") + '"><p>' + fmt(s.box.testo) + "</p></div>";
@@ -166,7 +194,19 @@
     h += '</article><div class="pager">' +
       (i > 0 ? '<a class="btn secondary" href="#/guida/' + G[i - 1].id + '">← Precedente</a>' : "<span></span>") +
       (i < G.length - 1 ? '<a class="btn" href="#/guida/' + G[i + 1].id + '">Successivo →</a>' : '<a class="btn" href="#/pratica">Passa alla pratica →</a>') + "</div>";
-    return { title: c.titolo + " · " + NOME, html: h };
+    function vaiA(k) {
+      var el = document.getElementById("sez-" + k);
+      if (el) { el.scrollIntoView(); el.focus({ preventScroll: true }); }
+    }
+    return { title: c.titolo + " · " + NOME, html: h,
+      after: function () {
+        var t = main.querySelector(".toc-cap");
+        if (t) t.addEventListener("click", function (e) {
+          var a = e.target.closest("a[data-sez]"); if (!a) return;
+          e.preventDefault(); vaiA(a.dataset.sez);
+        });
+      },
+      afterScroll: function () { var k = param(qs, "s"); if (/^\d+$/.test(k)) vaiA(k); } };
   }
 
   function pagePratica() {
@@ -225,17 +265,17 @@
       "<h1>" + esc(s.titolo) + "</h1><p>" + esc(s.contesto) + "</p><h2>Cosa fai?</h2><div id=\"opts\">" +
       s.opzioni.map(function (o, i) {
         return '<button class="option" type="button" data-i="' + i + '">' + esc(o.testo) + "</button>";
-      }).join("") + '</div><div id="esito" aria-live="polite"></div>' +
+      }).join("") + '</div><div id="esito" class="callout" tabindex="-1" hidden></div>' +
       '<div class="pager" id="pagerSc">' + (idx > 0 ? '<a class="btn secondary" href="#/scenari/' + SC[idx - 1].id + '">← Precedente</a>' : "<span></span>") +
       (idx < SC.length - 1 ? '<a class="btn" href="#/scenari/' + SC[idx + 1].id + '">Prossimo →</a>' : '<a class="btn" href="#/scenari">Tutti gli scenari</a>') + "</div>";
     return { title: s.titolo + " · " + NOME, html: h, after: function () {
       document.getElementById("opts").addEventListener("click", function (e) {
-        var b = e.target.closest(".option"); if (!b || b.disabled) return;
+        var b = e.target.closest(".option"); if (!b || scState[id]) return;
         var i = +b.dataset.i;
-        scState[id] = { scelto: i };
+        scState[id] = { scelto: i, ok: s.opzioni[i].ok };
         var etichette = ["Da evitare", "Accettabile, ma migliorabile", "Molto efficace"];
         [].forEach.call(this.querySelectorAll(".option"), function (x, k) {
-          x.disabled = true;
+          x.setAttribute("aria-disabled", "true");
           x.classList.add("o" + s.opzioni[k].ok);
           if (k !== i) x.classList.add("dim");
           var tag = document.createElement("span");
@@ -243,7 +283,14 @@
           tag.innerHTML = "<strong>" + etichette[s.opzioni[k].ok] + ".</strong> " + esc(s.opzioni[k].esito);
           x.appendChild(tag);
         });
-        live.textContent = etichette[s.opzioni[i].ok];
+        // Il commento completo sta fuori dai pulsanti, così viene sempre letto.
+        var box = document.getElementById("esito");
+        var testo = "<p><strong>" + etichette[s.opzioni[i].ok] + ".</strong> " + esc(s.opzioni[i].esito) + "</p>";
+        if (Object.keys(scState).length === SC.length) {
+          var buoni = SC.filter(function (x) { return scState[x.id] && scState[x.id].ok === 2; }).length;
+          testo += "<p>Hai completato tutti i " + SC.length + " scenari: in " + buoni + " hai scelto la risposta più efficace. Non conta il punteggio, conta aver riflettuto su cosa si prova e su cosa può aiutare.</p>";
+        }
+        box.innerHTML = testo; box.hidden = false; box.focus();
       });
     } };
   }
@@ -332,7 +379,7 @@
       field("fb2", "2. Che emozione credo che provi?", "Prova a nominarla. Es.: «rabbia», «umiliazione», «paura di essere abbandonato».") +
       field("fb3", "3. Perché ha senso, dal suo punto di vista?", "Es.: «dopo la giornata che hai avuto», «perché ti sei sentito ignorato».") +
       field("fb4", "4. Quale domanda restituisce capacità di agire?", "Es.: «Cosa ti aiuterebbe adesso?»") +
-      '<div class="btn-row"><button class="btn" type="submit">Crea la frase</button><button class="btn ghost" type="reset" id="fbReset">Cancella</button></div>' +
+      '<div class="btn-row"><button class="btn" type="submit">Crea la frase</button><button class="btn ghost" type="reset" id="fbReset">Cancella</button><button class="btn secondary" type="button" id="fbCopy" hidden>Copia</button></div>' +
       '<div class="output" id="fbOut" hidden></div></form>';
   }
   function field(id, label, hint) {
@@ -350,8 +397,10 @@
       if (d) parts.push(d.replace(/[.!?]*$/, "") + (/[?]$/.test(d) ? "" : "?"));
       out.hidden = false;
       out.textContent = parts.length ? parts.join(" ") : "Compila almeno un campo.";
+      document.getElementById("fbCopy").hidden = !parts.length;
     };
-    f.onreset = function () { out.hidden = true; out.textContent = ""; };
+    f.onreset = function () { out.hidden = true; out.textContent = ""; document.getElementById("fbCopy").hidden = true; };
+    document.getElementById("fbCopy").onclick = function () { copia(out.textContent, this); };
   }
   function lower(s) { return s.charAt(0).toLowerCase() + s.slice(1); }
 
@@ -362,7 +411,7 @@
       field("d3", "A – Chiedo o rifiuto con chiarezza", "Es.: «Ti chiedo di avvisarmi se fai tardi».") +
       field("d4", "R – Rinforzo: cosa si guadagna", "Es.: «Così potrò stare più tranquillo e organizzarmi».") +
       '<p class="hint">M (restare concentrati), A (tono e postura sicuri) e N (essere disponibili a una soluzione intermedia) si praticano mentre parli.</p>' +
-      '<div class="btn-row"><button class="btn" type="submit">Crea il testo</button><button class="btn ghost" type="reset">Cancella</button></div>' +
+      '<div class="btn-row"><button class="btn" type="submit">Crea il testo</button><button class="btn ghost" type="reset">Cancella</button><button class="btn secondary" type="button" id="dCopy" hidden>Copia</button></div>' +
       '<div class="output" id="dOut" hidden></div></form>';
   }
   function dearInit() {
@@ -372,24 +421,27 @@
       var v = [f.d1, f.d2, f.d3, f.d4].map(function (x) { return x.value.trim(); }).filter(Boolean);
       out.hidden = false;
       out.textContent = v.length ? v.map(function (x) { return x.replace(/\s+$/, ""); }).join("\n\n") : "Compila almeno un campo.";
+      document.getElementById("dCopy").hidden = !v.length;
     };
-    f.onreset = function () { out.hidden = true; out.textContent = ""; };
+    f.onreset = function () { out.hidden = true; out.textContent = ""; document.getElementById("dCopy").hidden = true; };
+    document.getElementById("dCopy").onclick = function () { copia(out.textContent, this); };
   }
 
   function checkinHtml() {
     return '<form class="card" id="chk"><p>Pensa all\'ultimo mese. Segna ciò che ti riguarda.</p>' +
       window.CHECKIN.map(function (t, i) { return '<label class="check"><input type="checkbox" value="1"> <span>' + esc(t) + "</span></label>"; }).join("") +
-      '<div class="output" id="cOut" aria-live="polite">Segna le voci che senti vere.</div></form>';
+      '<div class="output" id="cOut" aria-live="polite">Segna le voci che senti vere.</div>' +
+      '<p class="hint">Non è un test validato e non fa diagnosi: serve solo a fermarti un momento a guardare come stai.</p></form>';
   }
   function checkinInit() {
     var f = document.getElementById("chk"), out = document.getElementById("cOut");
     function upd() {
       var n = f.querySelectorAll("input:checked").length, t;
-      if (n === 0) t = "Segna le voci che senti vere.";
-      else if (n <= 2) t = "Sembra che tu stia reggendo, con qualche segnale di fatica. Concediti una pausa e, se puoi, parlane con una persona di fiducia.";
-      else if (n <= 5) t = "Ci sono diversi segnali di sovraccarico. Può aiutarti un gruppo per familiari o un colloquio con uno psicologo o con il medico di base. Chiedere sostegno non toglie nulla a chi ami.";
-      else t = "Sembra che tu sia molto sotto pressione. Ti consigliamo di parlarne presto con il medico di base o con un professionista. Se hai pensieri di farti del male o ti senti senza speranza, vai a Emergenze.";
-      out.textContent = t;
+      if (n === 0) { out.textContent = "Segna le voci che senti vere."; return; }
+      if (n <= 2) t = "Sembra che tu stia reggendo, con qualche segnale di fatica. Concediti una pausa e, se puoi, parlane con una persona di fiducia.";
+      else if (n <= 5) t = "Ci sono diversi segnali di sovraccarico. Può aiutarti un gruppo per familiari o un colloquio con uno psicologo o con il medico di base. Chiedere sostegno non toglie nulla a chi ami. Se ti serve aiuto subito, trovi i recapiti in {{#/emergenze|Emergenze}}.";
+      else t = "Sembra che tu sia molto sotto pressione. Ti consigliamo di parlarne presto con il medico di base o con un professionista. Se hai pensieri di farti del male o ti senti senza speranza, vai a {{#/emergenze|Emergenze}}.";
+      out.innerHTML = fmt(t);
     }
     f.addEventListener("change", upd);
   }
@@ -414,14 +466,29 @@
       "<li>Se c'è un piano, dei mezzi o un gesto già compiuto: <a href=\"tel:112\">112</a>.</li>" +
       "<li>Avvisa appena possibile terapeuta o CSM.</li></ol>" +
       '<p><a href="#/guida/sicurezza">Approfondisci nel capitolo dedicato</a></p></div>' +
-      "<h2>Piano di sicurezza</h2><p>Modello da compilare con la persona e con i professionisti di riferimento. <strong>Non viene salvato</strong>: stampalo o fotografalo, e non condividerlo online se contiene recapiti personali.</p>" +
+      "<h2>Piano di sicurezza</h2><p>Modello da compilare con la persona e con i professionisti di riferimento. <strong>Non viene inviato a nessun server.</strong> Resta solo in questa scheda del browser, così non lo perdi se cambi pagina, e sparisce quando la chiudi o premi «Cancella tutto». Stampalo, copialo o fotografalo, e non condividerlo online se contiene recapiti personali. Se il dispositivo è condiviso, cancellalo quando hai finito.</p>" +
       '<form class="card" id="piano">' +
       window.PIANO.map(function (p, i) {
         return '<div class="field"><label for="p' + i + '">' + esc(p[0]) + ' <span class="hint">' + esc(p[1]) + '</span></label><textarea id="p' + i + '"></textarea></div>';
       }).join("") +
-      '<div class="btn-row no-print"><button class="btn" type="button" id="stampa">Stampa</button><button class="btn ghost" type="reset">Cancella tutto</button></div></form>';
+      '<div class="btn-row no-print"><button class="btn" type="button" id="stampa">Stampa</button><button class="btn secondary" type="button" id="pCopia">Copia</button><button class="btn ghost" type="reset">Cancella tutto</button></div></form>';
     return { title: "Emergenze · " + NOME, html: h, after: function () {
-      var b = document.getElementById("stampa"); if (b) b.onclick = function () { window.print(); };
+      var CHIAVE = "accanto-piano-sicurezza";
+      var f = document.getElementById("piano"), PI = window.PIANO;
+      function campo(i) { return document.getElementById("p" + i); }
+      try {
+        var salvato = JSON.parse(sessionStorage.getItem(CHIAVE) || "{}");
+        PI.forEach(function (p, i) { if (salvato[i]) campo(i).value = salvato[i]; });
+      } catch (e) {}
+      f.addEventListener("input", function () {
+        var o = {}; PI.forEach(function (p, i) { o[i] = campo(i).value; });
+        try { sessionStorage.setItem(CHIAVE, JSON.stringify(o)); } catch (e) {}
+      });
+      f.addEventListener("reset", function () { try { sessionStorage.removeItem(CHIAVE); } catch (e) {} });
+      document.getElementById("stampa").onclick = function () { window.print(); };
+      document.getElementById("pCopia").onclick = function () {
+        copia(PI.map(function (p, i) { return p[0] + "\n" + (campo(i).value.trim() || "—"); }).join("\n\n"), this);
+      };
     } };
   }
 
@@ -438,7 +505,7 @@
     });
     h += "<h2>Note</h2><div class=\"card\"><ul>" +
       "<li><strong>Nessuna diagnosi:</strong> la guida descrive il disturbo in termini generali; la diagnosi spetta a un professionista.</li>" +
-      "<li><strong>Privacy:</strong> l'app non usa account, cookie di tracciamento né analitiche. Ciò che scrivi negli esercizi resta sul tuo dispositivo e viene cancellato quando chiudi la pagina.</li>" +
+      "<li><strong>Privacy:</strong> l'app non usa account, cookie di tracciamento né analitiche. Ciò che scrivi negli esercizi resta sul tuo dispositivo e viene cancellato quando chiudi la pagina; il piano di sicurezza resta nella memoria della scheda finché non la chiudi o non premi «Cancella tutto».</li>" +
       "<li><strong>Linguaggio:</strong> i testi usano l'espressione «persona cara» o forme neutre, perché il disturbo riguarda persone di ogni genere ed età.</li>" +
       "<li><strong>Aggiornamento:</strong> le conoscenze cliniche evolvono; verifica sempre con i professionisti che seguono la tua situazione.</li></ul></div>";
     return { title: "Fonti · " + NOME, html: h };
@@ -451,25 +518,55 @@
   }
 
   /* Ricerca */
+  // Toglie la sintassi **grassetto** e {{#/link|testo}} dai brani mostrati nei risultati.
+  function piano(t) { return String(t).replace(/\{\{#\/[^|}]*\|(.+?)\}\}/g, "$1").replace(/\*\*/g, ""); }
+  // Punteggio e brano di testo per un elemento: null se non contiene tutte le parole.
+  function trova(toks, titolo, corpo) {
+    var nt = norm(titolo), nb = norm(corpo), tutto = nt + " " + nb;
+    for (var k = 0; k < toks.length; k++) if (tutto.indexOf(toks[k]) < 0) return null;
+    var punti = 0, pos = -1;
+    toks.forEach(function (t) {
+      if (nt.indexOf(t) >= 0) punti += 5;
+      var i = nb.indexOf(t), n = 0;
+      if (i >= 0 && (pos < 0 || i < pos)) pos = i;
+      while (i >= 0 && n < 10) { n++; i = nb.indexOf(t, i + t.length); }
+      punti += n;
+    });
+    var brano = "";
+    if (pos >= 0 && nb.length === corpo.length) {
+      var a = Math.max(0, pos - 50), b = Math.min(corpo.length, pos + 110);
+      brano = (a > 0 ? "…" : "") + corpo.slice(a, b).trim() + (b < corpo.length ? "…" : "");
+    }
+    return { punti: punti, brano: brano };
+  }
   function pageCerca(q) {
     var h = "<h1>Cerca</h1>" + searchBox(q);
     var toks = norm(q).split(/\s+/).filter(function (t) { return t.length > 1; });
     if (!toks.length) return { title: "Cerca · " + NOME, html: h + "<p>Scrivi una parola, per esempio «crisi», «limiti» o «vergogna».</p>" };
     var res = [];
-    function match(text) { var n = norm(text); return toks.every(function (t) { return n.indexOf(t) >= 0; }); }
+    function aggiungi(href, t, s, titoloCerca, corpo) {
+      var r = trova(toks, titoloCerca, piano(corpo));
+      if (r) res.push({ href: href, t: t, s: s, punti: r.punti, brano: r.brano, ord: res.length });
+    }
     G.forEach(function (c) {
-      c.sezioni.forEach(function (s) {
-        var all = s.t + " " + (s.p || []).join(" ") + " " + (s.l || []).join(" ") + " " + (s.box ? s.box.testo : "");
-        if (match(c.titolo + " " + all)) res.push({ href: "#/guida/" + c.id, t: s.t, s: "Guida · " + c.titolo });
+      c.sezioni.forEach(function (s, k) {
+        var corpo = (s.p || []).join(" ") + " " + (s.l || []).join(" ") + " " + (s.box ? s.box.testo : "");
+        aggiungi("#/guida/" + c.id + "?s=" + k, s.t, "Guida · " + c.titolo, c.titolo + " " + s.t, corpo);
       });
     });
-    GL.forEach(function (g) { if (match(g[0] + " " + g[1])) res.push({ href: "#/glossario", t: g[0], s: "Glossario" }); });
-    FR.forEach(function (f) { if (match(f.situazione + " " + f.evita + " " + f.prova + " " + f.perche)) res.push({ href: "#/frasi", t: f.situazione, s: "Frasi validanti" }); });
-    SC.forEach(function (s) { if (match(s.titolo + " " + s.contesto)) res.push({ href: "#/scenari/" + s.id, t: s.titolo, s: "Scenari" }); });
-    EX.forEach(function (e) { if (match(e.titolo + " " + e.scopo)) res.push({ href: "#/esercizi/" + e.id, t: e.titolo, s: "Esercizi" }); });
+    GL.forEach(function (g) { aggiungi("#/glossario", g[0], "Glossario", g[0], g[1]); });
+    FR.forEach(function (f) { aggiungi("#/frasi", f.situazione, "Frasi validanti", f.situazione, f.evita + " " + f.prova + " " + f.perche); });
+    SC.forEach(function (s) {
+      aggiungi("#/scenari/" + s.id, s.titolo, "Scenari", s.titolo, s.contesto + " " + s.opzioni.map(function (o) { return o.testo; }).join(" "));
+    });
+    EX.forEach(function (e) {
+      aggiungi("#/esercizi/" + e.id, e.titolo, "Esercizi", e.titolo, e.scopo + " " + (e.intro || "") + " " + (e.passi || []).map(function (p) { return p.t + " " + p.d; }).join(" "));
+    });
+    res.sort(function (a, b) { return b.punti - a.punti || a.ord - b.ord; });
     h += "<p>" + res.length + (res.length === 1 ? " risultato" : " risultati") + ' per «<mark>' + esc(q) + "</mark>».</p>";
     if (res.length) h += '<div class="grid">' + res.slice(0, 30).map(function (r) {
-      return '<a class="tile" href="' + r.href + '"><strong>' + esc(r.t) + "</strong><span>" + esc(r.s) + "</span></a>";
+      return '<a class="tile" href="' + r.href + '"><strong>' + esc(r.t) + "</strong><span>" + esc(r.s) + "</span>" +
+        (r.brano ? '<br><span class="hint">' + esc(r.brano) + "</span>" : "") + "</a>";
     }).join("") + "</div>";
     else h += "<p>Prova con una parola più semplice o più breve.</p>";
     return { title: "Cerca · " + NOME, html: h };
@@ -491,7 +588,7 @@
     var p;
     switch (sec) {
       case "home": p = pageHome(); break;
-      case "guida": p = seg[1] ? pageCapitolo(seg[1]) : pageGuida(); break;
+      case "guida": p = seg[1] ? pageCapitolo(seg[1], qs) : pageGuida(); break;
       case "pratica": p = pagePratica(); break;
       case "frasi": p = pageFrasi(); break;
       case "scenari": p = seg[1] ? pageScenario(seg[1]) : pageScenari(); break;
@@ -501,9 +598,7 @@
       case "fonti": p = pageFonti(); break;
       case "altro": p = pageAltro(); break;
       case "cerca":
-        var m = /(?:^|&)q=([^&]*)/.exec(qs); var q = "";
-        try { q = m ? decodeURIComponent(m[1].replace(/\+/g, " ")) : ""; } catch (e) { q = ""; }
-        p = pageCerca(q); break;
+        p = pageCerca(param(qs, "q")); break;
       default: p = page404();
     }
     main.innerHTML = p.html;
@@ -516,19 +611,37 @@
       var v = document.getElementById("q").value.trim();
       location.hash = "#/cerca?q=" + encodeURIComponent(v);
     });
+    // Il titolo della pagina dà il nome al contenuto principale: lo legge lo screen reader quando prende il focus.
+    var h1 = main.querySelector("h1");
+    if (h1) { h1.id = "titolo-pagina"; main.setAttribute("aria-labelledby", "titolo-pagina"); }
+    else main.removeAttribute("aria-labelledby");
     if (p.after) p.after();
     window.scrollTo(0, 0);
     main.focus({ preventScroll: true });
-    live.textContent = p.title;
+    if (p.afterScroll) p.afterScroll();
   }
 
   /* ---------- offline (service worker) ---------- */
   function registraSW() {
     if (!("serviceWorker" in navigator)) return;
     if (!(location.protocol === "https:" || location.hostname === "localhost" || location.hostname === "127.0.0.1")) return;
+    // Se la pagina era già controllata da un service worker, un cambio di controller significa che sono usciti contenuti nuovi.
+    var avevaController = !!navigator.serviceWorker.controller;
+    navigator.serviceWorker.addEventListener("controllerchange", function () { if (avevaController) avvisoAggiornamento(); });
     window.addEventListener("load", function () {
       navigator.serviceWorker.register("sw.js").catch(function () {});
     });
+  }
+  function avvisoAggiornamento() {
+    if (document.getElementById("aggiornamento")) return;
+    var d = document.createElement("div");
+    d.id = "aggiornamento"; d.className = "toast"; d.setAttribute("role", "status");
+    d.innerHTML = "<span>Ci sono contenuti aggiornati.</span> ";
+    var b = document.createElement("button");
+    b.type = "button"; b.className = "btn"; b.textContent = "Ricarica";
+    b.onclick = function () { location.reload(); };
+    d.appendChild(b);
+    document.body.appendChild(d);
   }
 
   buildNav();
