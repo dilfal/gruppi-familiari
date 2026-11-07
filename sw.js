@@ -1,6 +1,6 @@
 /* Service worker: precache dell'app e uso offline.
    Per pubblicare una nuova versione dei contenuti, cambia VERSIONE. */
-const VERSIONE = "accanto-a-te-a346c062d8";
+const VERSIONE = "accanto-a-te-22e49768d5";
 const FILE = [
   "./",
   "index.html",

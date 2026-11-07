@@ -499,7 +499,7 @@
     return { title: "Glossario · " + NOME, html: h + "</dl>" };
   }
   function pageFonti() {
-    var h = "<h1>Fonti e note</h1><p class=\"lead\">I contenuti sono una rielaborazione originale di concetti presenti nei testi seguenti. Non contengono passaggi copiati e non sostituiscono la lettura delle opere, che consigliamo per approfondire.</p>";
+    var h = "<h1>Fonti e note</h1>";
     window.FONTI.forEach(function (g) {
       h += "<h2>" + esc(g.gruppo) + "</h2><div class=\"card\"><ul>" + g.voci.map(function (v) { return "<li>" + esc(v) + "</li>"; }).join("") + "</ul></div>";
     });
