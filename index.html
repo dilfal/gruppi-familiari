@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Accanto a te – Guida per i familiari</title>
+  <meta name="description" content="Guida gratuita e anonima per chi sta vicino a una persona con disturbo borderline di personalità: informazioni, frasi, esercizi, scenari ed emergenze.">
+
+  <!-- Colori della barra di sistema (Android Chrome, Safari iOS) -->
+  <meta name="theme-color" content="#f6f3ee" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#161c1e" media="(prefers-color-scheme: dark)">
+  <meta name="color-scheme" content="light dark">
+
+  <!-- PWA: Android/Chrome -->
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="mobile-web-app-capable" content="yes">
+  <!-- PWA: iPhone/iPad (Safari) -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Accanto a te">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="format-detection" content="telephone=no">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+  <link rel="icon" type="image/svg+xml" href="icons/icon.svg">
+
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <a class="skip" href="#main">Vai al contenuto</a>
+
+  <header class="top" id="top">
+    <a class="brand" href="#/" aria-label="Accanto a te, pagina iniziale">
+      <img src="icons/icon.svg" alt="" width="28" height="28">
+      <span>Accanto a te</span>
+    </a>
+    <nav class="nav-desktop" aria-label="Navigazione principale" id="navDesktop"></nav>
+  </header>
+
+  <main id="main" tabindex="-1"></main>
+
+  <footer class="foot">
+    <p>Strumento informativo, gratuito e anonimo. Non sostituisce un professionista della salute mentale né un servizio di emergenza. Nessun dato viene raccolto o inviato.</p>
+  </footer>
+
+  <nav class="tabbar" aria-label="Navigazione principale" id="tabbar"></nav>
+
+  <div class="live" id="live" aria-live="polite" aria-atomic="true"></div>
+
+  <noscript>
+    <p style="padding:1rem">Questa guida richiede JavaScript. In caso di emergenza chiama il <strong>112</strong>.</p>
+  </noscript>
+
+  <script src="js/data-guida.js"></script>
+  <script src="js/data-pratica.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

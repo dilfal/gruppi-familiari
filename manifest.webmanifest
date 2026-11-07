@@ -1,0 +1,20 @@
+{
+  "name": "Accanto a te – Guida per i familiari",
+  "short_name": "Accanto a te",
+  "description": "Guida gratuita e anonima per chi sta vicino a una persona con disturbo borderline di personalità.",
+  "lang": "it",
+  "dir": "ltr",
+  "id": "./",
+  "start_url": "./index.html#/",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#f6f3ee",
+  "theme_color": "#f6f3ee",
+  "categories": ["health", "education", "lifestyle"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
