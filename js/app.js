@@ -48,6 +48,63 @@
     if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(testo).then(ok, ripiego);
     else ripiego();
   }
+  // Riga «Fonte» sotto ogni contenuto: l'elenco completo dei testi è nella pagina Fonti.
+  function fonteHtml(f, etichetta) {
+    return f ? '<p class="fonte"><strong>' + (etichetta || "Fonte") + ":</strong> " + esc(f) + ' <a href="#/fonti">Tutte le fonti</a></p>' : "";
+  }
+
+  /* ---------- contenuti su misura: profilo PRIVATO, importato sul proprio telefono ----------
+     Non fa parte del sito: i testi personali non stanno mai nel repository pubblico. Qui c'è solo il codice
+     generico che li legge, li ripulisce e li mostra; tutto resta nella memoria di questo dispositivo. */
+  var K_PROF = "accanto.profilo", FORMATO = "accanto-profilo-1";
+  function txt(v, max) { return typeof v === "string" ? v.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, "").trim().slice(0, max) : ""; }
+  function elencoTesti(a, max, n) { return (Array.isArray(a) ? a : []).slice(0, n).map(function (x) { return txt(x, max); }).filter(Boolean); }
+  function mappaTesti(o, max, n) {
+    var out = {};
+    if (o && typeof o === "object" && !Array.isArray(o)) Object.keys(o).slice(0, n).forEach(function (k) {
+      var t = txt(o[k], max);
+      if (t && k.length <= 40) out[k] = t;
+    });
+    return out;
+  }
+  function elencoPersone(a, n) {
+    return (Array.isArray(a) ? a : []).slice(0, n).map(function (c) {
+      if (!c || typeof c !== "object") return null;
+      var num = txt(c.num, 24);
+      return { nome: txt(c.nome, 60), num: /[0-9]/.test(num) ? num : "", nota: txt(c.nota, 160) };
+    }).filter(function (c) { return c && c.nome; });
+  }
+  function profiloSicuro(raw) {
+    if (!raw || typeof raw !== "object" || raw.formato !== FORMATO) return null;
+    var P = { formato: FORMATO, creato: txt(raw.creato, 20), intro: txt(raw.intro, 900) };
+    P.aree = (Array.isArray(raw.aree) ? raw.aree : []).slice(0, 16).map(function (a) {
+      if (!a || typeof a !== "object") return null;
+      var o = { titolo: txt(a.titolo, 100), vedi: txt(a.vedi, 700), dentro: txt(a.dentro, 700), aiuta: elencoTesti(a.aiuta, 320, 8), evita: elencoTesti(a.evita, 320, 8) };
+      return o.titolo && (o.vedi || o.dentro || o.aiuta.length) ? o : null;
+    }).filter(Boolean);
+    P.risorse = (Array.isArray(raw.risorse) ? raw.risorse : []).slice(0, 10).map(function (r) {
+      return r && typeof r === "object" ? { titolo: txt(r.titolo, 80), testo: txt(r.testo, 500) } : null;
+    }).filter(function (r) { return r && r.titolo && r.testo; });
+    P.accordi = elencoTesti(raw.accordi, 320, 12);
+    var no = raw.note && typeof raw.note === "object" ? raw.note : {};
+    P.note = { guida: mappaTesti(no.guida, 700, 40), frasi: mappaTesti(no.frasi, 700, 20), scenari: mappaTesti(no.scenari, 700, 40), esercizi: mappaTesti(no.esercizi, 700, 40) };
+    P.nascondi = elencoTesti(raw.nascondi, 40, 20);
+    var sc = raw.sicurezza && typeof raw.sicurezza === "object" ? raw.sicurezza : null;
+    P.sicurezza = null;
+    if (sc) {
+      var S2 = { titolo: txt(sc.titolo, 90) || "Quando la tensione sale", intro: txt(sc.intro, 600), segnali: elencoTesti(sc.segnali, 280, 10), passi: elencoTesti(sc.passi, 320, 10),
+        evita: elencoTesti(sc.evita, 280, 10), persone: elencoPersone(sc.persone, 10), servizi: elencoPersone(sc.servizi, 8), chiusura: txt(sc.chiusura, 400) };
+      if (S2.intro || S2.segnali.length || S2.passi.length || S2.persone.length || S2.servizi.length) P.sicurezza = S2;
+    }
+    return P.aree.length || P.risorse.length || P.accordi.length || P.sicurezza ? P : null;
+  }
+  var PROF = null;
+  try { PROF = profiloSicuro(JSON.parse(localStorage.getItem(K_PROF) || "null")); } catch (e) { PROF = null; }
+  function notaProf(gruppo, id) { return (PROF && PROF.note[gruppo] && PROF.note[gruppo][id]) || ""; }
+  function parHtml(t) { return String(t).split(/\n+/).filter(Boolean).map(function (x) { return "<p>" + esc(x) + "</p>"; }).join(""); }
+  function notaHtml(t) { return t ? '<div class="callout misura"><span class="lab">Su misura</span>' + parHtml(t) + "</div>" : ""; }
+  function nascosto(id) { return !!PROF && PROF.nascondi.indexOf(id) >= 0; }
+
   function findChap(id) { for (var i = 0; i < G.length; i++) if (G[i].id === id) return i; return -1; }
 
   var ICONE = {
@@ -84,7 +141,7 @@
     }).join("");
   }
   function setActive(sec) {
-    var map = { frasi: "pratica", esercizi: "pratica", scenari: "pratica", glossario: "altro", fonti: "altro", cerca: "altro" };
+    var map = { frasi: "pratica", esercizi: "pratica", scenari: "pratica", glossario: "altro", fonti: "altro", cerca: "altro", misura: "altro" };
     var tabSec = map[sec] || sec;
     [].forEach.call(document.querySelectorAll("#tabbar a"), function (a) {
       if (a.dataset.sec === tabSec) a.setAttribute("aria-current", "page");
@@ -150,11 +207,12 @@
       tile("#/frasi", "Frasi validanti", "Cosa dire e cosa evitare nelle situazioni difficili, con il perché.", FR.length + " situazioni") +
       tile("#/esercizi", "Esercizi", "Respirazione, ancoraggio al presente, STOP, preparare una richiesta.", EX.length + " esercizi") +
       tile("#/scenari", "Scenari", "Situazioni a scelta con feedback, per fare pratica.", SC.length + " scenari") +
+      (PROF ? tile("#/misura", "Su misura", "Le schede e gli accordi del profilo importato su questo dispositivo.", PROF.aree.length + (PROF.aree.length === 1 ? " scheda" : " schede")) : "") +
       "</div>" +
       installCard() +
       '<section class="card"><h2>Come usare questa guida</h2><ul>' +
       "<li>Non serve leggere tutto: parti dal punto che ti serve adesso.</li>" +
-      "<li>Le informazioni sono riformulate da testi clinici e per familiari, elencati in <a href=\"#/fonti\">Fonti</a>.</li>" +
+      "<li>Le informazioni sono riformulate da testi clinici e per familiari: sotto ogni contenuto trovi la sua fonte, e l'elenco completo è in <a href=\"#/fonti\">Fonti</a>.</li>" +
       "<li>Niente account, niente dati personali, niente tracciamento: ciò che scrivi non viene inviato a nessun server.</li>" +
       "<li>La guida non fa diagnosi e non sostituisce un professionista.</li></ul></section>";
     return { title: NOME, html: h, after: refreshInstall };
@@ -180,7 +238,7 @@
     var i = findChap(id);
     if (i < 0) return page404();
     var c = G[i];
-    var h = '<p class="crumbs"><a href="#/guida">Guida</a> › Capitolo ' + (i + 1) + "</p><article class=\"chap\"><h1>" + esc(c.titolo) + '</h1><p><span class="badge">' + c.minuti + " min di lettura</span></p>";
+    var h = '<p class="crumbs"><a href="#/guida">Guida</a> › Capitolo ' + (i + 1) + "</p><article class=\"chap\"><h1>" + esc(c.titolo) + '</h1><p><span class="badge">' + c.minuti + " min di lettura</span></p>" + notaHtml(notaProf("guida", c.id));
     if (c.sezioni.length > 2) {
       h += '<nav class="toc-cap" aria-label="In questo capitolo"><strong>In questo capitolo</strong><ol>' +
         c.sezioni.map(function (s, k) { return '<li><a href="#/guida/' + c.id + '" data-sez="' + k + '">' + esc(s.t) + "</a></li>"; }).join("") + "</ol></nav>";
@@ -191,7 +249,7 @@
       if (s.l) h += "<ul>" + s.l.map(function (x) { return "<li>" + fmt(x) + "</li>"; }).join("") + "</ul>";
       if (s.box) h += '<div class="callout ' + (s.box.tipo === "attenzione" ? "attenzione" : "") + '"><p>' + fmt(s.box.testo) + "</p></div>";
     });
-    h += '</article><div class="pager">' +
+    h += fonteHtml(c.fonte, "Fonti di questo capitolo") + '</article><div class="pager">' +
       (i > 0 ? '<a class="btn secondary" href="#/guida/' + G[i - 1].id + '">← Precedente</a>' : "<span></span>") +
       (i < G.length - 1 ? '<a class="btn" href="#/guida/' + G[i + 1].id + '">Successivo →</a>' : '<a class="btn" href="#/pratica">Passa alla pratica →</a>') + "</div>";
     function vaiA(k) {
@@ -238,11 +296,11 @@
     } };
   }
   function frasiList() {
-    return FR.filter(function (f) { return fraseFiltro === "tutte" || f.tag === fraseFiltro; }).map(function (f) {
+    return notaHtml(notaProf("frasi", fraseFiltro)) + FR.filter(function (f) { return fraseFiltro === "tutte" || f.tag === fraseFiltro; }).map(function (f) {
       return '<article class="card frase"><div class="sit">' + esc(f.situazione) + "</div>" +
         '<div class="row no"><span class="lab">Meglio evitare</span>' + esc(f.evita) + "</div>" +
         '<div class="row si"><span class="lab">Puoi provare</span>' + esc(f.prova) + "</div>" +
-        '<div class="row why"><strong>Perché:</strong> ' + esc(f.perche) + ' <span class="badge">' + esc(f.livello) + "</span></div></article>";
+        '<div class="row why"><strong>Perché:</strong> ' + esc(f.perche) + ' <span class="badge">' + esc(f.livello) + "</span>" + fonteHtml(f.fonte) + "</div></article>";
     }).join("");
   }
 
@@ -267,14 +325,12 @@
         return '<button class="option" type="button" data-i="' + i + '">' + esc(o.testo) + "</button>";
       }).join("") + '</div><div id="esito" class="callout" tabindex="-1" hidden></div>' +
       '<div class="pager" id="pagerSc">' + (idx > 0 ? '<a class="btn secondary" href="#/scenari/' + SC[idx - 1].id + '">← Precedente</a>' : "<span></span>") +
-      (idx < SC.length - 1 ? '<a class="btn" href="#/scenari/' + SC[idx + 1].id + '">Prossimo →</a>' : '<a class="btn" href="#/scenari">Tutti gli scenari</a>') + "</div>";
+      (idx < SC.length - 1 ? '<a class="btn" href="#/scenari/' + SC[idx + 1].id + '">Prossimo →</a>' : '<a class="btn" href="#/scenari">Tutti gli scenari</a>') + "</div>" + fonteHtml(s.fonte);
     return { title: s.titolo + " · " + NOME, html: h, after: function () {
-      document.getElementById("opts").addEventListener("click", function (e) {
-        var b = e.target.closest(".option"); if (!b || scState[id]) return;
-        var i = +b.dataset.i;
-        scState[id] = { scelto: i, ok: s.opzioni[i].ok };
+      var opts = document.getElementById("opts");
+      function mostra(i, fuoco) {
         var etichette = ["Da evitare", "Accettabile, ma migliorabile", "Molto efficace"];
-        [].forEach.call(this.querySelectorAll(".option"), function (x, k) {
+        [].forEach.call(opts.querySelectorAll(".option"), function (x, k) {
           x.setAttribute("aria-disabled", "true");
           x.classList.add("o" + s.opzioni[k].ok);
           if (k !== i) x.classList.add("dim");
@@ -290,16 +346,25 @@
           var buoni = SC.filter(function (x) { return scState[x.id] && scState[x.id].ok === 2; }).length;
           testo += "<p>Hai completato tutti i " + SC.length + " scenari: in " + buoni + " hai scelto la risposta più efficace. Non conta il punteggio, conta aver riflettuto su cosa si prova e su cosa può aiutare.</p>";
         }
-        box.innerHTML = testo; box.hidden = false; box.focus();
+        box.innerHTML = testo + notaHtml(notaProf("scenari", id)); box.hidden = false;
+        if (fuoco) box.focus();
+      }
+      opts.addEventListener("click", function (e) {
+        var b = e.target.closest(".option"); if (!b || scState[id]) return;
+        var i = +b.dataset.i;
+        scState[id] = { scelto: i, ok: s.opzioni[i].ok };
+        mostra(i, true);
       });
+      if (scState[id]) mostra(scState[id].scelto, false);
     } };
   }
 
   /* Esercizi */
   function pageEsercizi() {
     var h = "<h1>Esercizi</h1><p class=\"lead\">Brevi pratiche guidate. Nulla di ciò che scrivi viene salvato.</p><div class=\"grid\">";
-    EX.forEach(function (e) { h += tile("#/esercizi/" + e.id, e.titolo, e.scopo, e.durata); });
-    return { title: "Esercizi · " + NOME, html: h + "</div>" };
+    EX.forEach(function (e) { if (!nascosto(e.id)) h += tile("#/esercizi/" + e.id, e.titolo, e.scopo, e.durata); });
+    var tolti = EX.filter(function (e) { return nascosto(e.id); }).length;
+    return { title: "Esercizi · " + NOME, html: h + "</div>" + (tolti ? '<p class="hint">' + (tolti === 1 ? "Un esercizio non è in elenco" : tolti + " esercizi non sono in elenco") + ' perché il profilo «Su misura» li sconsiglia in questa situazione. <a href="#/misura">Vedi il profilo</a></p>' : "") };
   }
   var breathTimer = null;
   function stopBreath() { if (breathTimer) { clearTimeout(breathTimer); breathTimer = null; } }
@@ -307,7 +372,7 @@
   function pageEsercizio(id) {
     var ex = null; EX.forEach(function (e) { if (e.id === id) ex = e; });
     if (!ex) return page404();
-    var h = '<p class="crumbs"><a href="#/esercizi">Esercizi</a> › ' + esc(ex.titolo) + "</p><h1>" + esc(ex.titolo) + '</h1><p><span class="badge">' + esc(ex.durata) + "</span></p><p class=\"lead\">" + esc(ex.scopo) + "</p>";
+    var h = '<p class="crumbs"><a href="#/esercizi">Esercizi</a> › ' + esc(ex.titolo) + "</p><h1>" + esc(ex.titolo) + '</h1><p><span class="badge">' + esc(ex.durata) + "</span></p><p class=\"lead\">" + esc(ex.scopo) + "</p>" + notaHtml(notaProf("esercizi", ex.id));
     var after = null;
     if (ex.avviso) h += '<div class="callout attenzione"><p><strong>Prima di iniziare.</strong> ' + esc(ex.avviso) + "</p></div>";
     if (ex.tipo === "respiro") { h += respiroHtml(ex); after = function () { respiroInit(ex); }; }
@@ -315,6 +380,7 @@
     else if (ex.tipo === "frase") { h += fraseBuilderHtml(); after = fraseBuilderInit; }
     else if (ex.tipo === "dear") { h += dearHtml(); after = dearInit; }
     else if (ex.tipo === "checkin") { h += checkinHtml(); after = checkinInit; }
+    h += fonteHtml(ex.fonte);
     h += '<div class="callout avviso no-print"><p>Se durante un esercizio ti senti peggio, interrompi e, se ti serve aiuto, vai a <a href="#/emergenze">Emergenze</a>.</p></div>';
     return { title: ex.titolo + " · " + NOME, html: h, after: after, leave: stopBreath };
   }
@@ -505,16 +571,105 @@
     });
     h += "<h2>Note</h2><div class=\"card\"><ul>" +
       "<li><strong>Nessuna diagnosi:</strong> la guida descrive il disturbo in termini generali; la diagnosi spetta a un professionista.</li>" +
-      "<li><strong>Privacy:</strong> l'app non usa account, cookie di tracciamento né analitiche. Ciò che scrivi negli esercizi resta sul tuo dispositivo e viene cancellato quando chiudi la pagina; il piano di sicurezza resta nella memoria della scheda finché non la chiudi o non premi «Cancella tutto».</li>" +
+      "<li><strong>Privacy:</strong> l'app non usa account, cookie di tracciamento né analitiche. Ciò che scrivi negli esercizi resta sul tuo dispositivo e viene cancellato quando chiudi la pagina; il piano di sicurezza resta nella memoria della scheda finché non la chiudi o non premi «Cancella tutto». Solo se importi un profilo «Su misura», quello resta nella memoria di questo dispositivo finché non lo rimuovi; non viene mai inviato.</li>" +
+      "<li><strong>Fonti:</strong> sotto ogni capitolo, frase, scenario ed esercizio è indicato il testo da cui viene l'idea. I contenuti sono riformulati, non copiati.</li>" +
       "<li><strong>Linguaggio:</strong> i testi usano l'espressione «persona cara» o forme neutre, perché il disturbo riguarda persone di ogni genere ed età.</li>" +
       "<li><strong>Aggiornamento:</strong> le conoscenze cliniche evolvono; verifica sempre con i professionisti che seguono la tua situazione.</li></ul></div>";
     return { title: "Fonti · " + NOME, html: h };
   }
+  /* Su misura: importazione e lettura del profilo privato */
+  function listaHtml(a) { return a.length ? "<ul>" + a.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ul>" : ""; }
+  function personeHtml(a) {
+    return a.map(function (c) {
+      var tel = c.num.replace(/[^0-9+]/g, "");
+      return '<div class="num-card"><div><strong>' + esc(c.nome) + "</strong>" + (c.nota ? '<br><span class="hint">' + esc(c.nota) + "</span>" : "") + "</div>" +
+        (tel ? '<div><a class="tel" href="tel:' + esc(tel) + '">' + esc(c.num) + "</a></div>" : "") + "</div>";
+    }).join("");
+  }
+  function importaHtml() {
+    return '<div class="btn-row"><label class="btn secondary" for="profFile">Importa da file</label><input id="profFile" class="live" type="file" accept=".json,.txt,application/json,text/plain">' +
+      '<button class="btn secondary" type="button" id="profIncolla">Incolla il testo</button>' +
+      (PROF ? '<button class="btn ghost" type="button" id="profRimuovi">Rimuovi il profilo</button>' : "") + "</div>" +
+      '<div id="profBox" hidden><div class="field"><label for="profTesto">Testo del profilo</label><textarea id="profTesto" rows="5" autocomplete="off" spellcheck="false"></textarea></div>' +
+      '<button class="btn" type="button" id="profConferma">Importa</button></div>' +
+      '<p class="hint" id="profHint" role="status" aria-live="polite"></p>';
+  }
+  function pageMisura() {
+    var h = "<h1>Su misura</h1>";
+    if (!PROF) {
+      h += '<p class="lead">Se chi segue la persona che ti è cara ti ha consegnato un file di profilo, puoi importarlo qui.</p>' +
+        '<div class="card"><ul><li>Il profilo viene preparato con il consenso della persona e contiene solo ciò che lei ha scelto di condividere.</li>' +
+        "<li>Resta nella memoria di questo dispositivo: non viene inviato a nessun server e non fa parte del sito.</li>" +
+        "<li>Si toglie in qualsiasi momento con «Rimuovi il profilo». Se il dispositivo è condiviso, valuta se importarlo.</li></ul>" + importaHtml() + "</div>";
+    } else {
+      h += '<p class="lead">Queste pagine sono solo tue e restano su questo dispositivo. Descrivono come funzionano le difficoltà e le risorse della persona che ti è cara, e che cosa aiuta.</p>' +
+        (PROF.intro ? '<div class="card">' + parHtml(PROF.intro) + "</div>" : "");
+      if (PROF.aree.length) {
+        h += "<h2>Schede</h2>" + PROF.aree.map(function (a) {
+          return '<details class="card scheda"><summary>' + esc(a.titolo) + "</summary>" +
+            (a.vedi ? "<h3>Che cosa vedi da fuori</h3>" + parHtml(a.vedi) : "") +
+            (a.dentro ? "<h3>Che cosa succede dentro</h3>" + parHtml(a.dentro) : "") +
+            (a.aiuta.length ? "<h3>Che cosa aiuta</h3>" + listaHtml(a.aiuta) : "") +
+            (a.evita.length ? "<h3>Che cosa è meglio evitare</h3>" + listaHtml(a.evita) : "") + "</details>";
+        }).join("");
+      }
+      if (PROF.risorse.length) h += "<h2>Risorse da notare e nominare</h2><div class=\"card\"><ul>" + PROF.risorse.map(function (r) {
+        return "<li><strong>" + esc(r.titolo) + ".</strong> " + esc(r.testo) + "</li>";
+      }).join("") + "</ul></div>";
+      if (PROF.accordi.length) h += "<h2>Accordi fra voi</h2><div class=\"card\">" + listaHtml(PROF.accordi) + "</div>";
+      var S = PROF.sicurezza;
+      if (S) {
+        h += "<h2>" + esc(S.titolo) + '</h2><div class="card">' + (S.intro ? parHtml(S.intro) : "") +
+          (S.segnali.length ? "<h3>Segnali che puoi vedere</h3>" + listaHtml(S.segnali) : "") +
+          (S.passi.length ? "<h3>Che cosa fare, in ordine</h3><ol>" + S.passi.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ol>" : "") +
+          (S.evita.length ? "<h3>Che cosa evitare</h3>" + listaHtml(S.evita) : "") +
+          (S.persone.length ? "<h3>Persone</h3>" + personeHtml(S.persone) : "") +
+          (S.servizi.length ? "<h3>Professionisti e servizi</h3>" + personeHtml(S.servizi) : "") +
+          (S.chiusura ? parHtml(S.chiusura) : "") +
+          '<p>Se c\'è un pericolo immediato: <a href="tel:112"><strong>112</strong></a>. Vedi <a href="#/emergenze">Emergenze</a>.</p></div>';
+      }
+      h += '<h2>Gestione del profilo</h2><div class="card"><p>Profilo importato' + (PROF.creato ? " (" + esc(PROF.creato) + ")" : "") +
+        ". Trovi le note «Su misura» anche dentro alcuni capitoli, frasi, scenari ed esercizi. «Esci subito» lascia il sito ma non cancella il profilo: per toglierlo usa «Rimuovi il profilo».</p>" + importaHtml() + "</div>";
+    }
+    return { title: "Su misura · " + NOME, html: h, after: function () {
+      var hint = document.getElementById("profHint");
+      function importa(testo) {
+        var raw = null;
+        try { raw = JSON.parse(String(testo)); } catch (e) { hint.textContent = "Questo testo non è un profilo di Accanto a te."; return; }
+        var P = profiloSicuro(raw);
+        if (!P) { hint.textContent = "Questo non sembra un profilo di Accanto a te (formato non riconosciuto)."; return; }
+        try { localStorage.setItem(K_PROF, JSON.stringify(P)); } catch (e) { hint.textContent = "Non è stato possibile salvarlo su questo dispositivo."; return; }
+        PROF = P; route(); live.textContent = "Profilo importato.";
+      }
+      document.getElementById("profIncolla").onclick = function () {
+        var b = document.getElementById("profBox"); b.hidden = !b.hidden;
+        if (!b.hidden) document.getElementById("profTesto").focus();
+      };
+      document.getElementById("profConferma").onclick = function () { importa(document.getElementById("profTesto").value); };
+      document.getElementById("profFile").onchange = function () {
+        var file = this.files && this.files[0]; this.value = "";
+        if (!file) return;
+        if (file.size > 300000) { hint.textContent = "Il file è troppo grande per essere un profilo."; return; }
+        var r = new FileReader();
+        r.onload = function () { importa(r.result); };
+        r.onerror = function () { hint.textContent = "Non è stato possibile leggere il file."; };
+        r.readAsText(file);
+      };
+      var rim = document.getElementById("profRimuovi");
+      if (rim) rim.onclick = function () {
+        if (!window.confirm("Rimuovere il profilo da questo dispositivo?")) return;
+        try { localStorage.removeItem(K_PROF); } catch (e) {}
+        PROF = null; route(); live.textContent = "Profilo rimosso.";
+      };
+    } };
+  }
+
   function pageAltro() {
     return { title: "Altro · " + NOME, html: "<h1>Altro</h1><div class=\"grid\">" +
       tile("#/glossario", "Glossario", "Le parole della guida, spiegate.", GL.length + " voci") +
       tile("#/fonti", "Fonti e note", "Da dove vengono i contenuti, privacy, limiti.", "Informazioni") +
-      tile("#/cerca", "Cerca", "Trova un argomento in tutta la guida.", "Ricerca") + "</div>" + installCard(), after: refreshInstall };
+      tile("#/cerca", "Cerca", "Trova un argomento in tutta la guida.", "Ricerca") +
+      tile("#/misura", "Su misura", "Importa o consulta il profilo ricevuto da chi vi segue.", PROF ? "Profilo importato" : "Nessun profilo") + "</div>" + installCard(), after: refreshInstall };
   }
 
   /* Ricerca */
@@ -604,6 +759,7 @@
       case "glossario": p = pageGlossario(); break;
       case "fonti": p = pageFonti(); break;
       case "altro": p = pageAltro(); break;
+      case "misura": p = pageMisura(); break;
       case "cerca":
         p = pageCerca(param(qs, "q")); break;
       default: p = page404();

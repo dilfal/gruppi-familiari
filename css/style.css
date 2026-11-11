@@ -314,3 +314,12 @@ mark { background: var(--warm-soft); color: inherit; padding: 0 2px; border-radi
   main { max-width: none; padding: 0; }
   textarea { border: 1px solid #999 !important; min-height: 60px; }
 }
+
+/* Riga «Fonte» sotto i contenuti e note «Su misura» del profilo importato */
+.fonte { color: var(--muted); font-size: .82rem; margin: .8em 0 0; }
+.frase .fonte { margin-top: .5em; }
+.callout.misura { border-color: var(--warm); background: var(--warm-soft); }
+.callout.misura .lab { display: block; font-size: .75rem; letter-spacing: .04em; text-transform: uppercase; font-weight: 700; margin-bottom: 4px; }
+.scheda summary { font-weight: 700; cursor: pointer; }
+.scheda h3 { font-size: 1rem; margin: 1em 0 .3em; }
+.card .num-card { padding: 10px 0; border-top: 1px solid var(--line); }

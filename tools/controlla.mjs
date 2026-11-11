@@ -58,7 +58,7 @@ for (const m of html.matchAll(/(?:src|href)="([^"#:]+)"/g)) {
 const ctx = { console };
 ctx.window = ctx;
 vm.createContext(ctx);
-for (const f of ["js/data-guida.js", "js/data-pratica.js"]) {
+for (const f of ["js/data-guida.js", "js/data-pratica.js", "js/data-guida-2.js", "js/data-pratica-2.js"]) {
   try { vm.runInContext(leggi(f), ctx, { filename: f }); } catch (e) { errore(`${f}: ${e.message}`); }
 }
 const { GUIDA = [], SCENARI = [], ESERCIZI = [], FRASI = [], FRASI_TAG = [] } = ctx;
@@ -85,8 +85,18 @@ const tag = new Set(FRASI_TAG.map((t) => t[0]));
 for (const f of FRASI) if (f.tag && !tag.has(f.tag)) errore(`Frase «${f.situazione}»: tag «${f.tag}» inesistente.`);
 for (const c of GUIDA) if (!c.sezioni || !c.sezioni.length) errore(`Capitolo «${c.id}»: nessuna sezione.`);
 
+/* Ogni contenuto dichiara la sua fonte. */
+const senzaFonte = (x) => typeof x.fonte !== "string" || x.fonte.trim().length < 8;
+for (const c of GUIDA) if (senzaFonte(c)) errore(`Capitolo «${c.id}»: manca la fonte.`);
+for (const s of SCENARI) if (senzaFonte(s)) errore(`Scenario «${s.id}»: manca la fonte.`);
+for (const e of ESERCIZI) if (senzaFonte(e)) errore(`Esercizio «${e.id}»: manca la fonte.`);
+for (const f of FRASI) if (senzaFonte(f)) errore(`Frase «${f.situazione}»: manca la fonte.`);
+
+/* Nessun profilo personale nel repository: il codice pubblico contiene solo l'importazione generica. */
+for (const f of fileCache) if (/profilo|referto/i.test(f)) errore(`sw.js: «${f}» sembra un file personale e non va pubblicato.`);
+
 /* ---------- link interni ---------- */
-const ROTTE = new Set(["", "guida", "pratica", "frasi", "scenari", "esercizi", "emergenze", "glossario", "fonti", "altro", "cerca"]);
+const ROTTE = new Set(["", "guida", "pratica", "frasi", "scenari", "esercizi", "emergenze", "glossario", "fonti", "altro", "cerca", "misura"]);
 const figli = { guida: new Set(GUIDA.map((x) => x.id)), scenari: new Set(SCENARI.map((x) => x.id)), esercizi: new Set(ESERCIZI.map((x) => x.id)) };
 function controllaLink(href, dove) {
   const [percorso] = href.replace(/^#\/?/, "").split("?");

@@ -6,6 +6,7 @@ window.GUIDA = [
     titolo: "Che cos'è il disturbo borderline di personalità",
     sommario: "Definizione, criteri diagnostici, idee sbagliate più diffuse.",
     minuti: 7,
+    fonte: "Gunderson e Hoffman, Disturbo di personalità borderline, cap. 1; Porr, Superare il disturbo borderline di personalità, cap. 1.",
     sezioni: [
       {
         t: "Una definizione",
@@ -57,6 +58,7 @@ window.GUIDA = [
     titolo: "Emozioni, relazioni e vergogna: cosa accade dentro",
     sommario: "Disregolazione emotiva, ipersensibilità, mentalizzazione.",
     minuti: 8,
+    fonte: "Linehan, Cognitive-Behavioral Treatment of Borderline Personality Disorder (modello biosociale); Porr, cap. 2 e cap. 9; Il modello GET, cap. 1; Carbone, Crisi tempestose, «La finestra di tolleranza».",
     sezioni: [
       {
         t: "La disregolazione emotiva",
@@ -104,6 +106,7 @@ window.GUIDA = [
     titolo: "Cause e colpa",
     sommario: "Un quadro multifattoriale, e perché cercare un colpevole non aiuta.",
     minuti: 4,
+    fonte: "Gunderson e Hoffman, cap. 8 («Evitare il biasimo nella ricerca delle cause»); Porr, cap. 1; Il modello GET, cap. 5 §4.4.",
     sezioni: [
       {
         t: "Un quadro con più fattori",
@@ -132,6 +135,7 @@ window.GUIDA = [
     titolo: "Il vissuto dei familiari",
     sommario: "Genitori, partner, fratelli, figli: il peso che si porta e come nominarlo.",
     minuti: 6,
+    fonte: "Porr, cap. 1 («Il DBP e le relazioni familiari») e cap. 7 («Lutto e lutto non riconosciuto»); Il modello GET, cap. 5 §2.",
     sezioni: [
       {
         t: "Un carico concreto e uno emotivo",
@@ -168,6 +172,7 @@ window.GUIDA = [
     titolo: "Percorsi di cura",
     sommario: "Terapie con prove di efficacia, ruolo dei farmaci, come scegliere.",
     minuti: 8,
+    fonte: "Gunderson e Hoffman, cap. 2, cap. 4 e cap. 9; Porr, cap. 4; Il modello GET, cap. 2 e cap. 5 §3.",
     sezioni: [
       {
         t: "Psicoterapie specifiche",
@@ -213,6 +218,7 @@ window.GUIDA = [
     titolo: "La validazione: la competenza chiave",
     sommario: "Che cos'è, i sei livelli, cosa non è, quando non validare.",
     minuti: 10,
+    fonte: "Porr, cap. 5 («Comprendere e applicare la validazione»); Linehan, DBT Skills Training Handouts and Worksheets, Interpersonal Effectiveness Handout 17 e 18.",
     sezioni: [
       {
         t: "Che cosa significa validare",
@@ -288,6 +294,7 @@ window.GUIDA = [
     titolo: "Comunicare quando la tensione sale",
     sommario: "Segnali di rottura, pausa, strumenti scritti, la richiesta chiara.",
     minuti: 9,
+    fonte: "Porr, cap. 9 («Applicare le tecniche della mentalizzazione a caldo») e cap. 8; Linehan, Handouts, Interpersonal Effectiveness Handout 5 (DEAR MAN).",
     sezioni: [
       {
         t: "Riconoscere quando la conversazione si è «rotta»",
@@ -342,6 +349,7 @@ window.GUIDA = [
     titolo: "Limiti, responsabilità e sostegno",
     sommario: "Aiutare senza sostituirsi; accettare e cambiare insieme.",
     minuti: 8,
+    fonte: "Porr, cap. 1 («Un consiglio iatrogeno: l'amore severo»), cap. 5 e cap. 10 (CHIRP); Linehan, Handouts, Interpersonal Effectiveness Handout 15 e 16 (dialettica).",
     sezioni: [
       {
         t: "La tensione tra accettazione e cambiamento",
@@ -401,6 +409,7 @@ window.GUIDA = [
     titolo: "Autolesionismo e pensieri suicidari",
     sommario: "Capire, non sottovalutare, sapere cosa fare.",
     minuti: 8,
+    fonte: "Gunderson e Hoffman, cap. 3 («Comportamenti suicidari e autolesivi»); Carbone, Crisi tempestose, «Redigere il piano di salvataggio per comunicare nel pieno della crisi».",
     sezioni: [
       {
         t: "Cosa sapere",
@@ -449,6 +458,7 @@ window.GUIDA = [
     titolo: "Prendersi cura di sé",
     sommario: "Autovalidazione, mindfulness, supporto, confini.",
     minuti: 7,
+    fonte: "Porr, cap. 5 («Non dimenticate di autovalidarvi!»), cap. 6 (mindfulness, stati della mente) e cap. 7 (accettazione radicale); Linehan, Handouts, Mindfulness Handout 3 e Distress Tolerance Handout 11.",
     sezioni: [
       {
         t: "Perché è parte dell'aiuto",
@@ -498,6 +508,7 @@ window.GUIDA = [
     titolo: "Prospettive di recupero",
     sommario: "Cosa dicono gli studi sul decorso; ricadute e speranza realistica.",
     minuti: 5,
+    fonte: "Gunderson e Hoffman, cap. 5 («Il decorso longitudinale»); Porr, cap. 10; Carbone, Crisi tempestose, «La recovery è un viaggio».",
     sezioni: [
       {
         t: "Il decorso nel tempo",

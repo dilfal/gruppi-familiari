@@ -1,3 +1,13 @@
+# ===== Dati personali e clinici: MAI nel repository =====
+privato/
+profilo*.json
+*profilo*.json
+*.profilo
+referto*
+REFERTO*
+brief_clinico*
+STATO.md
+
 # ===== Segreti, credenziali e token =====
 .env
 .env.*
@@ -102,3 +112,6 @@ $RECYCLE.BIN/
 .claude/cost/
 .antigravity/
 .gemini/
+
+# ===== Appunti e documenti: non si pubblicano =====
+*.md

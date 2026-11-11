@@ -17,7 +17,8 @@ window.FRASI = [
     evita: "«Ma no, non è vero! Guarda quante cose hai fatto!»",
     prova: "«Sembra che oggi tutto pesi tantissimo e che ti senta senza valore. Deve fare molto male.»",
     perche: "Contraddire subito comunica che l'emozione è sbagliata. Prima si riconosce il dolore; solo dopo, con calma, si possono ricordare i successi passati («essere la sua memoria»).",
-    livello: "Rispecchiare"
+    livello: "Rispecchiare",
+    fonte: "Porr, cap. 5 (rispecchiare) e cap. 10 («Siate la memoria del vostro caro»)"
   },
   {
     tag: "rabbia",
@@ -25,7 +26,8 @@ window.FRASI = [
     evita: "«Non ti permetto di parlarmi così!» oppure andarsene offesi.",
     prova: "«Vedo quanta rabbia e quanto dolore ci sono in questo momento. Voglio capire cosa è successo. Se adesso non riusciamo, faccio una pausa e torno tra dieci minuti.»",
     perche: "Non si risponde al contenuto ma alla sofferenza. La pausa dichiarata, con il momento del ritorno, non è un abbandono.",
-    livello: "Prestare attenzione, rispecchiare"
+    livello: "Prestare attenzione, rispecchiare",
+    fonte: "Porr, cap. 5 («Non reagite con rabbia»)"
   },
   {
     tag: "abbandono",
@@ -33,7 +35,8 @@ window.FRASI = [
     evita: "«Sono sicuro che non intendeva niente, stai esagerando.»",
     prova: "«Capisco perché ti sia sembrato un rifiuto: fa male quando succede. Vuoi raccontarmi cosa è successo, passo per passo?»",
     perche: "Si riconosce la perla di verità (l'impressione di rifiuto), poi si esplorano insieme interpretazioni alternative.",
-    livello: "Perla di verità"
+    livello: "Perla di verità",
+    fonte: "Porr, cap. 5 («Trovare la perla di verità»)"
   },
   {
     tag: "rabbia",
@@ -41,7 +44,8 @@ window.FRASI = [
     evita: "«Provaci, ti conosco meglio di chiunque altro!»",
     prova: "«Può darsi che io non capisca tutto. Mi aiuti a capire? Anche solo qualche parola mi basta.»",
     perche: "Il «non capiresti» segnala che la comunicazione si è interrotta. L'umiltà e la curiosità riaprono lo spazio.",
-    livello: "Autenticità radicale"
+    livello: "Autenticità radicale",
+    fonte: "Porr, cap. 9 («Siate umili»)"
   },
   {
     tag: "confini",
@@ -49,7 +53,8 @@ window.FRASI = [
     evita: "«No, e basta. Te l'ho già detto mille volte!» oppure cedere per evitare la scena.",
     prova: "«Capisco che sei in difficoltà e che vorresti una soluzione subito. Su questo non posso aiutarti, ma mi interessa come pensi di affrontarlo. Qual è la prima cosa che ti verrebbe in mente?»",
     perche: "Si riconosce l'emozione, si mantiene un limite preciso e si restituisce capacità di agire senza risolvere al posto suo.",
-    livello: "Normalizzare + limite"
+    livello: "Normalizzare + limite",
+    fonte: "Porr, cap. 10 («Costruite un senso di competenza»); Il modello GET, cap. 5 §4.3.3"
   },
   {
     tag: "progressi",
@@ -57,7 +62,8 @@ window.FRASI = [
     evita: "«Finalmente! Visto che si può?» oppure grandi lodi che suonano da giudizio.",
     prova: "«Hai saputo fermarti prima di reagire. Deve essere costato molta fatica.»",
     perche: "Riconoscere lo sforzo specifico rinforza la sensazione di padronanza più delle valutazioni generali.",
-    livello: "Prestare attenzione"
+    livello: "Prestare attenzione",
+    fonte: "Porr, cap. 10 («Costruite un senso di competenza e di rispetto di sé»)"
   },
   {
     tag: "crisi",
@@ -65,7 +71,8 @@ window.FRASI = [
     evita: "«Perché lo fai? Mi fai impazzire! Avevi promesso!»",
     prova: "«Grazie per avermelo mostrato. Immagino quanto dolore ci fosse. Ti serve aiuto per medicare? Poi pensiamo insieme a come avvisare il tuo terapeuta.»",
     perche: "Contrasta la vergogna e mette al primo posto la cura e la sicurezza. Se la ferita è profonda: Pronto Soccorso.",
-    livello: "Leggere la mente, comprendere"
+    livello: "Leggere la mente, comprendere",
+    fonte: "Gunderson e Hoffman, cap. 3; Porr, cap. 5"
   },
   {
     tag: "crisi",
@@ -73,7 +80,8 @@ window.FRASI = [
     evita: "«Smettila di ricattarmi!»",
     prova: "«Mi preoccupo molto per te. Mi stai dicendo che stai pensando di ucciderti? Voglio che tu sia al sicuro: chiamiamo insieme il tuo terapeuta o il 112.»",
     perche: "Una minaccia di suicidio va sempre presa sul serio. Si chiede in modo diretto e si attiva la rete professionale. Vedi la pagina Emergenze.",
-    livello: "Priorità alla sicurezza"
+    livello: "Priorità alla sicurezza",
+    fonte: "Gunderson e Hoffman, cap. 3"
   },
   {
     tag: "abbandono",
@@ -81,7 +89,8 @@ window.FRASI = [
     evita: "«Parto solo per tre giorni, non c'è motivo di preoccuparsi!»",
     prova: "«Allontanarmi qualche giorno può risvegliare la paura di restare soli. Parto il mercoledì e torno il sabato; ci sentiamo la sera alle nove, anche solo per un saluto.»",
     perche: "Prevedibilità e accordi chiari riducono il vuoto in cui prospera la paura di abbandono.",
-    livello: "Normalizzare, comprendere"
+    livello: "Normalizzare, comprendere",
+    fonte: "Porr, cap. 10 («Gestire le contingenze»)"
   },
   {
     tag: "rabbia",
@@ -89,7 +98,8 @@ window.FRASI = [
     evita: "«Che esagerazione, sono solo dieci minuti!»",
     prova: "«Capisco perché ti sia sembrato così: aspettare senza notizie fa sentire dimenticati. Mi dispiace averti fatto stare male. Mi racconti cosa è successo mentre aspettavi?»",
     perche: "Le scuse sincere sull'effetto (non necessariamente sull'intenzione) e la curiosità sono più efficaci di spiegazioni logiche.",
-    livello: "Comprendere, autenticità"
+    livello: "Comprendere, autenticità",
+    fonte: "Porr, cap. 5 («Non reagite in base alla logica»)"
   },
   {
     tag: "vergogna",
@@ -97,7 +107,8 @@ window.FRASI = [
     evita: "«Parla! Non puoi fare così ogni volta!»",
     prova: "«Vedo che oggi hai bisogno di silenzio. Sono qui, se vuoi parlare ne parliamo; più tardi ti scrivo come stai.»",
     perche: "Insistere aumenta la pressione. Dichiarare la propria disponibilità e un momento in cui ci si farà vivi riduce l'incertezza.",
-    livello: "Prestare attenzione"
+    livello: "Prestare attenzione",
+    fonte: "Porr, cap. 5 («Prestare attenzione»)"
   },
   {
     tag: "rabbia",
@@ -105,7 +116,8 @@ window.FRASI = [
     evita: "«Non è andata così! Ricordo benissimo!»",
     prova: "«Ricordiamo la cosa in modo diverso. Capisco che per te sia andata così e che ti abbia ferito. Mi interessa come l'hai vissuta.»",
     perche: "Discutere su chi ha ragione porta quasi sempre in un vicolo cieco. Si validano esperienza e dolore senza dare ragione sul fatto.",
-    livello: "Validare i ricordi"
+    livello: "Validare i ricordi",
+    fonte: "Porr, cap. 5 («Validare i ricordi»)"
   },
   {
     tag: "confini",
@@ -113,7 +125,8 @@ window.FRASI = [
     evita: "«O ti curi o non ti aiuto più!»",
     prova: "«Capisco che le cure ti siano sembrate inutili o faticose. Cosa vorresti fosse diverso? La decisione è tua, e io ci sono.»",
     perche: "Gli ultimatum alimentano la paura di abbandono. L'autonomia e l'ascolto lasciano aperto il canale.",
-    livello: "Autenticità radicale"
+    livello: "Autenticità radicale",
+    fonte: "Porr, cap. 1 («Un consiglio iatrogeno: l'amore severo»)"
   },
   {
     tag: "rabbia",
@@ -121,7 +134,8 @@ window.FRASI = [
     evita: "«Dopo tutto quello che ho fatto per te!»",
     prova: "«Deve essere terribile sentirsi così poco capiti da chi si ama. Voglio capire cosa è successo.»",
     perche: "L'accusa spesso esprime la sofferenza del momento e non un giudizio stabile. Non va presa sul personale né difesa.",
-    livello: "Comprendere, normalizzare"
+    livello: "Comprendere, normalizzare",
+    fonte: "Porr, cap. 5 («Non personalizzate»)"
   }
 ];
 
@@ -141,6 +155,7 @@ window.FRASI_EVITA = [
 window.SCENARI = [
   {
     id: "accusa",
+    fonte: "Porr, cap. 5 («Non personalizzate», «Non reagite con rabbia»)",
     titolo: "«Sei una persona orribile»",
     contesto: "Una persona cara rientra a casa dopo una giornata difficile. Lo scambio inizia con una domanda banale, e la persona scoppia: «Sei una persona orribile, non ti importa niente di me, non mi capisci mai!».",
     opzioni: [
@@ -151,6 +166,7 @@ window.SCENARI = [
   },
   {
     id: "ritardo",
+    fonte: "Porr, cap. 5 («Non reagite in base alla logica») e cap. 8",
     titolo: "Il messaggio senza risposta",
     contesto: "Una persona cara ha scritto tre messaggi di fila, in poche ore, mentre eri in riunione. Quando finalmente rispondi, arriva: «Lo sapevo che mi avresti ignorato. Contavo solo per te quando ti faceva comodo».",
     opzioni: [
@@ -161,6 +177,7 @@ window.SCENARI = [
   },
   {
     id: "denaro",
+    fonte: "Porr, cap. 10; Il modello GET, cap. 5 §4.3.3",
     titolo: "La richiesta di denaro",
     contesto: "Una persona cara ti chiede di prestarle di nuovo del denaro per una spesa urgente. Hai già detto, la volta scorsa, che non l'avresti più fatto. Ora insiste e dice: «Se non mi aiuti, nessuno lo farà mai».",
     opzioni: [
@@ -171,6 +188,7 @@ window.SCENARI = [
   },
   {
     id: "autolesionismo",
+    fonte: "Gunderson e Hoffman, cap. 3; Porr, cap. 5",
     titolo: "Il segno sul braccio",
     contesto: "Noti dei tagli recenti su un braccio di una persona cara. La persona se ne accorge, si copre in fretta e dice: «Non è niente, lasciami stare».",
     opzioni: [
@@ -181,6 +199,7 @@ window.SCENARI = [
   },
   {
     id: "successo",
+    fonte: "Porr, cap. 10 («Costruite un senso di competenza»)",
     titolo: "Una buona notizia",
     contesto: "Dopo settimane difficili, una persona cara ti racconta di aver usato una tecnica imparata in terapia e di aver evitato un litigio. Aggiunge, quasi di sfuggita: «Magari era solo fortuna».",
     opzioni: [
@@ -191,6 +210,7 @@ window.SCENARI = [
   },
   {
     id: "notte",
+    fonte: "Gunderson e Hoffman, cap. 3",
     titolo: "La chiamata a tarda notte",
     contesto: "A mezzanotte una persona cara ti chiama in lacrime: dice che tutto è inutile e che «tanto è meglio sparire».",
     opzioni: [
@@ -205,6 +225,7 @@ window.SCENARI = [
 window.ESERCIZI = [
   {
     id: "respiro",
+    fonte: "Linehan, DBT Skills Training Handouts and Worksheets, Distress Tolerance Handout 6 (respirazione ritmata)",
     tipo: "respiro",
     titolo: "Respirazione con espirazione lunga",
     durata: "2–3 minuti",
@@ -214,6 +235,7 @@ window.ESERCIZI = [
   },
   {
     id: "54321",
+    fonte: "Carbone, Crisi tempestose, «Strumenti pratici», scheda «5-4-3-2-1»",
     tipo: "passi",
     titolo: "5-4-3-2-1: tornare al presente",
     durata: "2–4 minuti",
@@ -229,6 +251,7 @@ window.ESERCIZI = [
   },
   {
     id: "stop",
+    fonte: "Linehan, DBT Skills Training Handouts and Worksheets, Distress Tolerance Handout 4 (abilità STOP)",
     tipo: "passi",
     titolo: "STOP prima di rispondere",
     durata: "1–2 minuti",
@@ -242,6 +265,7 @@ window.ESERCIZI = [
   },
   {
     id: "raffreddare",
+    fonte: "Linehan, DBT Skills Training Handouts and Worksheets, Distress Tolerance Handout 6 (abilità TIP), in forma attenuata",
     tipo: "passi",
     titolo: "Raffreddare il corpo",
     durata: "1–3 minuti",
@@ -256,6 +280,7 @@ window.ESERCIZI = [
   },
   {
     id: "frase",
+    fonte: "Porr, cap. 5 («Mettere in pratica la validazione»)",
     tipo: "frase",
     titolo: "Costruire una frase validante",
     durata: "2 minuti",
@@ -263,6 +288,7 @@ window.ESERCIZI = [
   },
   {
     id: "dear",
+    fonte: "Linehan, Handouts, Interpersonal Effectiveness Handout 5 (DEAR MAN); Porr, cap. 8 («Chiedere quello che si desidera»)",
     tipo: "dear",
     titolo: "Preparare una richiesta (DEAR MAN)",
     durata: "5 minuti",
@@ -270,6 +296,7 @@ window.ESERCIZI = [
   },
   {
     id: "checkin",
+    fonte: "Elaborazione originale; sul carico di chi assiste: Il modello GET, cap. 5 §2",
     tipo: "checkin",
     titolo: "Il mio livello di sovraccarico",
     durata: "1 minuto",
