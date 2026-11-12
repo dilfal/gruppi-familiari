@@ -1,6 +1,6 @@
 /* Service worker: precache dell'app e uso offline.
    Per pubblicare una nuova versione dei contenuti, cambia VERSIONE. */
-const VERSIONE = "accanto-a-te-010378a90d";
+const VERSIONE = "accanto-a-te-595b672e51";
 const FILE = [
   "./",
   "index.html",
@@ -10,6 +10,9 @@ const FILE = [
   "js/data-pratica.js",
   "js/data-guida-2.js",
   "js/data-pratica-2.js",
+  "js/data-guida-3.js",
+  "js/data-percorso.js",
+  "js/data-ruoli.js",
   "js/app.js",
   "icons/icon.svg",
   "icons/icon-192.png",

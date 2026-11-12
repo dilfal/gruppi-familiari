@@ -58,10 +58,10 @@ for (const m of html.matchAll(/(?:src|href)="([^"#:]+)"/g)) {
 const ctx = { console };
 ctx.window = ctx;
 vm.createContext(ctx);
-for (const f of ["js/data-guida.js", "js/data-pratica.js", "js/data-guida-2.js", "js/data-pratica-2.js"]) {
+for (const f of ["js/data-guida.js", "js/data-pratica.js", "js/data-guida-2.js", "js/data-pratica-2.js", "js/data-guida-3.js", "js/data-percorso.js", "js/data-ruoli.js"]) {
   try { vm.runInContext(leggi(f), ctx, { filename: f }); } catch (e) { errore(`${f}: ${e.message}`); }
 }
-const { GUIDA = [], SCENARI = [], ESERCIZI = [], FRASI = [], FRASI_TAG = [] } = ctx;
+const { GUIDA = [], SCENARI = [], ESERCIZI = [], FRASI = [], FRASI_TAG = [], PERCORSO = [], PERCORSO_TEMI = [], STRUMENTI = [], RUOLI = [] } = ctx;
 
 function doppi(nome, lista) {
   const visti = new Set();
@@ -71,7 +71,42 @@ function doppi(nome, lista) {
     visti.add(x.id);
   }
 }
-doppi("GUIDA", GUIDA); doppi("SCENARI", SCENARI); doppi("ESERCIZI", ESERCIZI);
+doppi("GUIDA", GUIDA); doppi("SCENARI", SCENARI); doppi("ESERCIZI", ESERCIZI); doppi("STRUMENTI", STRUMENTI); doppi("RUOLI", RUOLI);
+
+/* Percorso: tappe numerate di seguito, ognuna con un tema esistente, le tre parti dell'incontro e un compito. */
+const temi = new Set(PERCORSO_TEMI.map((t) => t.id));
+const idGuida = new Set(GUIDA.map((c) => c.id));
+for (const [i, t] of PERCORSO.entries()) {
+  const dove = `Tappa ${t.n}`;
+  if (t.n !== i + 1) errore(`${dove}: le tappe vanno numerate di seguito da 1.`);
+  if (!temi.has(t.tema)) errore(`${dove}: tema «${t.tema}» inesistente.`);
+  if (!t.titolo || !t.sommario || !Array.isArray(t.apertura) || !t.apertura.length) errore(`${dove}: mancano titolo, sommario o apertura.`);
+  if (!Array.isArray(t.condivisione) || t.condivisione.length < 2) errore(`${dove}: servono almeno due domande di condivisione.`);
+  if (!Array.isArray(t.idee) || t.idee.length < 2) errore(`${dove}: servono almeno due idee.`);
+  if (i > 0 && !t.ripresa) errore(`${dove}: manca la ripresa del compito precedente.`);
+  for (const id of t.leggi || []) if (!idGuida.has(id)) errore(`${dove}: il capitolo «${id}» non esiste.`);
+  if (!(t.leggi || []).length) errore(`${dove}: nessun capitolo da leggere.`);
+  if (!t.compito || !t.compito.t || !t.compito.p || !Array.isArray(t.compito.link) || !t.compito.link.length) errore(`${dove}: compito incompleto.`);
+}
+/* Ruoli: ogni scheda ha pesi e attenzioni, rimanda a capitoli, scenari e strumenti esistenti e ha un esempio per ogni tappa. */
+const idScenari = new Set(SCENARI.map((s) => s.id)), idStrumenti = new Set(STRUMENTI.map((s) => s.id));
+if (!ctx.RUOLI_INTRO || !ctx.RUOLI_INTRO.lead || !Array.isArray(ctx.RUOLI_INTRO.nota)) errore("RUOLI_INTRO: mancano lead o nota.");
+for (const r of RUOLI) {
+  const dove = `Ruolo «${r.id}»`;
+  if (!/^[a-z]+$/.test(r.id || "")) errore(`${dove}: l'id deve essere di sole lettere minuscole.`);
+  if (!r.titolo || !r.chi || !r.lead) errore(`${dove}: mancano titolo, chi o lead.`);
+  if (!Array.isArray(r.pesi) || r.pesi.length < 3 || !Array.isArray(r.attenzione) || r.attenzione.length < 3) errore(`${dove}: servono almeno tre pesi e tre attenzioni.`);
+  for (const id of r.leggi || []) if (!idGuida.has(id)) errore(`${dove}: il capitolo «${id}» non esiste.`);
+  for (const id of r.scenari || []) if (!idScenari.has(id)) errore(`${dove}: lo scenario «${id}» non esiste.`);
+  if ((r.leggi || []).length < 3 || (r.scenari || []).length < 3) errore(`${dove}: servono almeno tre capitoli e tre scenari.`);
+  if (new Set(r.leggi).size !== (r.leggi || []).length || new Set(r.scenari).size !== (r.scenari || []).length) errore(`${dove}: capitoli o scenari ripetuti.`);
+  if (!r.strumento || !idStrumenti.has(r.strumento.id) || !r.strumento.perche) errore(`${dove}: strumento mancante o inesistente.`);
+  for (const t of PERCORSO) if (typeof (r.tappe || {})[t.n] !== "string" || r.tappe[t.n].length < 20) errore(`${dove}: manca l'esempio per la tappa ${t.n}.`);
+  for (const k of Object.keys(r.tappe || {})) if (!PERCORSO.some((t) => String(t.n) === k)) errore(`${dove}: esempio per una tappa inesistente (${k}).`);
+}
+
+/* Il riformulatore usa espressioni regolari scritte a mano: devono essere valide. */
+for (const s of STRUMENTI) for (const c of s.coppie || []) { try { new RegExp(c[0]); } catch (e) { errore(`Strumento «${s.id}»: espressione non valida «${c[0]}».`); } }
 
 for (const s of SCENARI) {
   if (!Array.isArray(s.opzioni) || s.opzioni.length < 2) errore(`Scenario «${s.id}»: servono almeno due opzioni.`);
@@ -85,19 +120,36 @@ const tag = new Set(FRASI_TAG.map((t) => t[0]));
 for (const f of FRASI) if (f.tag && !tag.has(f.tag)) errore(`Frase «${f.situazione}»: tag «${f.tag}» inesistente.`);
 for (const c of GUIDA) if (!c.sezioni || !c.sezioni.length) errore(`Capitolo «${c.id}»: nessuna sezione.`);
 
+/* Approfondimenti: titolo, testo e riferimento al libro. */
+for (const c of GUIDA) for (const [k, s] of c.sezioni.entries()) {
+  const a = s.approf;
+  if (a && !(a.t && Array.isArray(a.p) && a.p.length && typeof a.rif === "string" && a.rif.length >= 8)) {
+    errore(`Capitolo «${c.id}», sezione ${k + 1}: l'approfondimento deve avere t, p e rif.`);
+  }
+}
+/* Le parti della guida elencano ogni capitolo una volta sola, nell'ordine di GUIDA. */
+if (ctx.GUIDA_PARTI) {
+  const inParti = ctx.GUIDA_PARTI.flatMap((p) => p.ids);
+  if (inParti.join("|") !== GUIDA.map((c) => c.id).join("|")) errore("GUIDA_PARTI non corrisponde all'ordine dei capitoli di GUIDA.");
+}
+
 /* Ogni contenuto dichiara la sua fonte. */
 const senzaFonte = (x) => typeof x.fonte !== "string" || x.fonte.trim().length < 8;
 for (const c of GUIDA) if (senzaFonte(c)) errore(`Capitolo «${c.id}»: manca la fonte.`);
 for (const s of SCENARI) if (senzaFonte(s)) errore(`Scenario «${s.id}»: manca la fonte.`);
 for (const e of ESERCIZI) if (senzaFonte(e)) errore(`Esercizio «${e.id}»: manca la fonte.`);
 for (const f of FRASI) if (senzaFonte(f)) errore(`Frase «${f.situazione}»: manca la fonte.`);
+for (const t of PERCORSO) if (senzaFonte(t)) errore(`Tappa ${t.n}: manca la fonte.`);
+for (const s of STRUMENTI) if (senzaFonte(s)) errore(`Strumento «${s.id}»: manca la fonte.`);
+for (const r of RUOLI) if (senzaFonte(r)) errore(`Ruolo «${r.id}»: manca la fonte.`);
 
 /* Nessun profilo personale nel repository: il codice pubblico contiene solo l'importazione generica. */
 for (const f of fileCache) if (/profilo|referto/i.test(f)) errore(`sw.js: «${f}» sembra un file personale e non va pubblicato.`);
 
 /* ---------- link interni ---------- */
-const ROTTE = new Set(["", "guida", "pratica", "frasi", "scenari", "esercizi", "emergenze", "glossario", "fonti", "altro", "cerca", "misura"]);
-const figli = { guida: new Set(GUIDA.map((x) => x.id)), scenari: new Set(SCENARI.map((x) => x.id)), esercizi: new Set(ESERCIZI.map((x) => x.id)) };
+const ROTTE = new Set(["", "guida", "pratica", "frasi", "scenari", "esercizi", "emergenze", "glossario", "fonti", "altro", "cerca", "misura", "percorso", "strumenti", "appunti", "ruolo"]);
+const figli = { guida: new Set(GUIDA.map((x) => x.id)), scenari: new Set(SCENARI.map((x) => x.id)), esercizi: new Set(ESERCIZI.map((x) => x.id)),
+  percorso: new Set(PERCORSO.map((x) => String(x.n))), strumenti: new Set(STRUMENTI.map((x) => x.id)), ruolo: new Set(RUOLI.map((x) => x.id)) };
 function controllaLink(href, dove) {
   const [percorso] = href.replace(/^#\/?/, "").split("?");
   const seg = percorso.split("/").filter(Boolean);
@@ -105,10 +157,10 @@ function controllaLink(href, dove) {
   if (seg[1] && !(figli[seg[0]] && figli[seg[0]].has(seg[1]))) errore(`${dove}: il link «${href}» punta a un elemento inesistente.`);
 }
 (function visita(v, dove) {
-  if (typeof v === "string") for (const m of v.matchAll(/\{\{(#\/[^|}]*)\|/g)) controllaLink(m[1], dove);
+  if (typeof v === "string") { for (const m of v.matchAll(/\{\{(#\/[^|}]*)\|/g)) controllaLink(m[1], dove); if (/^#\//.test(v)) controllaLink(v, dove); }
   else if (Array.isArray(v)) v.forEach((x, i) => visita(x, `${dove}[${i}]`));
   else if (v && typeof v === "object") for (const k of Object.keys(v)) visita(v[k], `${dove}.${k}`);
-})({ GUIDA, SCENARI, ESERCIZI, FRASI, GLOSSARIO: ctx.GLOSSARIO, EMERGENZE: ctx.EMERGENZE }, "dati");
+})({ GUIDA, SCENARI, ESERCIZI, FRASI, GLOSSARIO: ctx.GLOSSARIO, EMERGENZE: ctx.EMERGENZE, PERCORSO, PERCORSO_INTRO: ctx.PERCORSO_INTRO, STRUMENTI, RUOLI, RUOLI_INTRO: ctx.RUOLI_INTRO }, "dati");
 for (const m of leggi("js/app.js").matchAll(/href="(#\/[a-z0-9\/_-]*)(?:\?[^"]*)?"/g)) controllaLink(m[1], "app.js");
 
 if (errori.length) {
@@ -116,4 +168,4 @@ if (errori.length) {
   console.error(`\n${errori.length} problemi.`);
   process.exit(1);
 }
-console.log(`Tutto in ordine: ${GUIDA.length} capitoli, ${SCENARI.length} scenari, ${ESERCIZI.length} esercizi, ${FRASI.length} frasi. Versione cache: ${versioneAttesa}.`);
+console.log(`Tutto in ordine: ${GUIDA.length} capitoli, ${PERCORSO.length} tappe, ${RUOLI.length} ruoli, ${STRUMENTI.length} strumenti, ${SCENARI.length} scenari, ${ESERCIZI.length} esercizi, ${FRASI.length} frasi. Versione cache: ${versioneAttesa}.`);
